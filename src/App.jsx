@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import { useTelegram } from './hooks/useTelegram.js'
-import { showRewardedAd } from './lib/ads.js'
+import { showRewardedAd, showRewardedPopup, showInAppInterstitial } from './lib/ads.js'
 import {
   CoinSVG, CoinSmall, CoinTiny,
   IconVideo, IconFlame, IconGift, IconCheck, IconClock, IconTrophy, IconZap, IconMegaphone, IconTwitterX, IconGamepad, IconShield, IconWithdraw, IconCopy, IconSend, IconStar, IconPlay, IconSpin as IconSpinSvg
@@ -77,6 +77,20 @@ export default function App() {
     return ()=> clearInterval(t)
   }, [])
 
+  // In-App Interstitial - Best Fit: Auto passive, no reward, timeframe 2 ads per 6min
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showInAppInterstitial(AD_ZONE_ID, {
+        frequency: 2,
+        capping: 0.1,
+        interval: 30,
+        timeout: 5,
+        everyPage: false
+      }).catch(()=>{})
+    }, 5000) // 5s delay before first auto ad
+    return () => clearTimeout(timer)
+  }, [])
+
   const showToast = (msg) => { setToast(msg); setTimeout(()=> setToast(null), 2200) }
 
   const addCoins = (amount, reason) => {
@@ -136,6 +150,16 @@ export default function App() {
     setSpinDeg(d=> d+ extraDeg)
     setSpinsLeft(s=> s-1)
     setTimeout(()=> addCoins(reward, 'Spin Win'), 3100)
+  }
+
+  const handlePremiumPopup = async (reward, title) => {
+    haptic('medium')
+    try {
+      await showRewardedPopup(AD_ZONE_ID)
+      addCoins(reward, title)
+    } catch {
+      showToast('Ad not ready, try again')
+    }
   }
 
   const handleMiningClaim = () => {
@@ -329,14 +353,14 @@ export default function App() {
             <div className="card" style={{background:'linear-gradient(135deg,#0F2A1F,#11162A)', borderColor:'rgba(0,214,143,0.2)'}}>
               <div style={{fontWeight:800, display:'flex', alignItems:'center', gap:6}}><CoinSmall size={16} /> Premium Offerwall</div>
               <div style={{fontSize:13, color:'#8B92B8', margin:'6px 0 12px'}}>High reward tasks updated daily • World Best</div>
-              <div className="task-item" onClick={()=>showToast('Opening Offerwall...')}>
+              <div className="task-item" onClick={()=>handlePremiumPopup(1000, 'Premium Game')}>
                 <div style={{width:44,height:44, borderRadius:12, background:'#FF3B5C', display:'grid', placeItems:'center'}}><IconGamepad size={20} /></div>
-                <div style={{flex:1}}><div style={{fontWeight:700, display:'flex', alignItems:'center', gap:6}}>Play Game 5 min <span style={{background:'#FF3B5C', color:'white', fontSize:10, padding:'2px 6px', borderRadius:6}}>HOT</span></div><div style={{fontSize:12,color:'#8B92B8'}}>Earn extra bonus • Instant verify</div></div>
+                <div style={{flex:1}}><div style={{fontWeight:700, display:'flex', alignItems:'center', gap:6}}>Play Game 5 min <span style={{background:'#FF3B5C', color:'white', fontSize:10, padding:'2px 6px', borderRadius:6}}>HOT • POPUP</span></div><div style={{fontSize:12,color:'#8B92B8'}}>Rewarded Popup • Direct offer • +1000</div></div>
                 <div className="task-reward" style={{display:'flex', alignItems:'center', gap:4}}><CoinTiny size={12} /> +1000</div>
               </div>
-              <div className="task-item" onClick={()=>showToast('Survey coming soon')}>
+              <div className="task-item" onClick={()=>handlePremiumPopup(1500, 'Survey')}>
                 <div style={{width:44,height:44, borderRadius:12, background:'#6C5CFF', display:'grid', placeItems:'center'}}><IconMegaphone size={20} /></div>
-                <div style={{flex:1}}><div style={{fontWeight:700}}>Complete Survey</div><div style={{fontSize:12,color:'#8B92B8'}}>2 min • High payout</div></div>
+                <div style={{flex:1}}><div style={{fontWeight:700, display:'flex', alignItems:'center', gap:6}}>Complete Survey <span style={{background:'#6C5CFF', color:'white', fontSize:10, padding:'2px 6px', borderRadius:6}}>POPUP</span></div><div style={{fontSize:12,color:'#8B92B8'}}>Rewarded Popup • 2 min • High payout</div></div>
                 <div className="task-reward" style={{display:'flex', alignItems:'center', gap:4}}><CoinTiny size={12} /> +1500</div>
               </div>
             </div>
