@@ -67,14 +67,18 @@ export default function App() {
     saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable })
   }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable])
 
-  // Firebase Realtime DB - Direct Telegram username system, all data save in real time
+  // Firebase Realtime DB - Direct Telegram username system, all data save in real time - with real-time banned listener
   useEffect(() => {
     if (!user?.id) return
     const uref = userRef(user.id)
     setFbStatus('loading')
-    get(uref).then(snap => {
+    const unsub = onValue(uref, snap => {
       if (snap.exists()) {
         const d = snap.val()
+        // Banned check - real time, immediate effect
+        if (d.banned) setIsBanned(true); else setIsBanned(false)
+        // Only update balance etc. if not initial load conflict? Use fbLoaded to avoid overwrite loop, but banned must be immediate
+        // For first load or when data changed externally, update all
         if (d.balance !== undefined) setBalance(d.balance)
         if (d.level !== undefined) setLevel(d.level)
         if (d.xp !== undefined) setXp(d.xp)
@@ -88,12 +92,10 @@ export default function App() {
         if (d.miningEnd !== undefined) setMiningEnd(d.miningEnd)
         if (d.miningClaimable !== undefined) setMiningClaimable(d.miningClaimable)
         if (d.tasks) setTasks(d.tasks)
-        // Fix dummy withdraw - remove fake 5000 Paid 2025-08-28
         if (d.withdraws) {
           const isDummy = d.withdraws.length===1 && d.withdraws[0].id===1 && d.withdraws[0].amount===5000 && d.withdraws[0].date==="2025-08-28"
           if (isDummy) {
             setWithdraws([])
-            // also clear in Firebase next auto-save will push []
           } else {
             setWithdraws(d.withdraws)
           }
@@ -101,9 +103,7 @@ export default function App() {
           setWithdraws([])
         }
         if (d.referrals !== undefined) setReferrals(d.referrals)
-        if (d.banned) setIsBanned(true); else setIsBanned(false)
         setFbStatus('connected')
-        // showToast handled elsewhere to avoid spam
       } else {
         // First time user - create in Realtime DB with direct Telegram username
         set(uref, {
@@ -117,11 +117,12 @@ export default function App() {
         }).then(()=> setFbStatus('connected')).catch(()=> setFbStatus('error'))
       }
       setFbLoaded(true)
-    }).catch(err => {
+    }, err => {
       console.warn('Firebase load failed', err)
       setFbStatus('error')
       setFbLoaded(true)
     })
+    return () => off(uref)
   }, [user?.id])
 
   // Firebase auto-save on every change (real time)
