@@ -59,7 +59,7 @@ export default function App() {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           chat_id: w._userId,
-          text: status==='Paid' ? `✅ Your withdraw of ৳${(w.amount/1000*5).toFixed(0)} (${w.amount} coins) via ${w.method} is Paid!` : `❌ Your withdraw ${w.amount} coins via ${w.method} is Rejected. Contact support.`,
+          text: status==='Paid' ? `✅ Your withdraw of ৳${(w.amount/1000*4).toFixed(0)} (${w.amount} coins) via ${w.method} is Paid!` : `❌ Your withdraw ${w.amount} coins via ${w.method} is Rejected. Contact support.`,
           parse_mode:'Markdown'
         })
       })
@@ -112,7 +112,7 @@ export default function App() {
 
   const totalBalance = users.reduce((s,u)=>s+(u.balance||0),0)
   const totalAds = users.reduce((s,u)=>s+(u.adsToday||0),0)
-  const totalTaka = (totalBalance/1000*5).toFixed(0)
+  const totalTaka = (totalBalance/1000*4).toFixed(0)
   const pendingW = withdraws.filter(w=>w.status==='Pending').length
   const totalUsers = users.length
 
@@ -143,7 +143,7 @@ export default function App() {
             <div className="stat"><div className="stat-val" style={{color: pendingW?'#FF3B5C':'#00D68F'}}>{pendingW}</div><div className="stat-label">Pending Withdraws</div></div>
             <div className="stat"><div className="stat-val">{withdraws.filter(w=>w.status==='Paid').length}</div><div className="stat-label">Paid Withdraws</div></div>
             <div className="stat"><div className="stat-val">11718341</div><div className="stat-label">Monetag Zone • In-App + Popup</div></div>
-            <div className="stat"><div className="stat-val">1000=5 Taka</div><div className="stat-label">Rate • Min 10000=50 Taka</div></div>
+            <div className="stat"><div className="stat-val">1000=4 Taka</div><div className="stat-label">Rate • Min 10000=40 Taka</div></div>
             <div className="stat"><div className="stat-val">{users.filter(u=>u.banned).length}</div><div className="stat-label">Banned Users</div></div>
           </div>
 
@@ -165,8 +165,8 @@ export default function App() {
                 <div style={{fontSize:11, color:'#8B92B8'}}>Monthly (×30)</div>
                 <div style={{fontSize:10, color:'#8B92B8'}}>৳{(totalAds*0.003*30*110).toFixed(0)}</div>
               </div>
-              <div style={{background: (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? 'rgba(0,214,143,0.08)' : 'rgba(255,59,92,0.08)', border:`1px solid ${ (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? 'rgba(0,214,143,0.2)' : 'rgba(255,59,92,0.2)'}`, borderRadius:12, padding:14, textAlign:'center'}}>
-                <div style={{fontSize:18, fontWeight:800, color: (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? '#00D68F' : '#FF3B5C'}}>${(totalAds*0.003 - totalBalance/1000*0.045).toFixed(2)}</div>
+              <div style={{background: (totalAds*0.003 - totalBalance/1000*0.036) >=0 ? 'rgba(0,214,143,0.08)' : 'rgba(255,59,92,0.08)', border:`1px solid ${ (totalAds*0.003 - totalBalance/1000*0.036) >=0 ? 'rgba(0,214,143,0.2)' : 'rgba(255,59,92,0.2)'}`, borderRadius:12, padding:14, textAlign:'center'}}>
+                <div style={{fontSize:18, fontWeight:800, color: (totalAds*0.003 - totalBalance/1000*0.036) >=0 ? '#00D68F' : '#FF3B5C'}}>${(totalAds*0.003 - totalBalance/1000*0.036).toFixed(2)}</div>
                 <div style={{fontSize:11, color:'#8B92B8'}}>Est. Profit Today</div>
                 <div style={{fontSize:10, color:'#8B92B8'}}>Earn - Payout</div>
               </div>
@@ -177,7 +177,7 @@ export default function App() {
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, fontSize:12, color:'#8B92B8', lineHeight:1.8}}>
                 <div>• Total Ads Today: <b style={{color:'white'}}>{totalAds}</b></div>
                 <div>• Avg Ads/User: <b style={{color:'white'}}>{totalUsers? (totalAds/totalUsers).toFixed(1):0}</b></div>
-                <div>• Payout Due: <b style={{color:'#FFB800'}}>{totalBalance} coins = ৳{totalTaka} (${(totalBalance/1000*0.045).toFixed(2)})</b></div>
+                <div>• Payout Due: <b style={{color:'#FFB800'}}>{totalBalance} coins = ৳{totalTaka} (${(totalBalance/1000*0.036).toFixed(2)})</b></div>
                 <div>• Per Ad Earn: <b style={{color:'#00D68F'}}>$0.003</b> • Per Ad Cost: $0.00225 (50 coin)</div>
                 <div>• In-App Auto: 2 per 6min = +{(totalUsers*2).toFixed(0)} ads/day est.</div>
                 <div>• Real check: <a href="https://monetag.com" target="_blank" style={{color:'#6C5CFF'}}>monetag.com → Reports</a></div>
@@ -205,7 +205,7 @@ export default function App() {
               </svg>
               <div style={{display:'flex', justifyContent:'space-between', fontSize:10, color:'#8B92B8', marginTop:4}}>
                 <span>Est. $ {(totalAds*0.003*0.6).toFixed(2)}</span>
-                <span style={{color:'#00D68F', fontWeight:700}}>Today ${ (totalAds*0.003).toFixed(2)} • Profit ${(totalAds*0.003 - totalBalance/1000*0.045).toFixed(2)}</span>
+                <span style={{color:'#00D68F', fontWeight:700}}>Today ${ (totalAds*0.003).toFixed(2)} • Profit ${(totalAds*0.003 - totalBalance/1000*0.036).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function App() {
               <thead><tr><th>User</th><th>Balance</th><th>Ads</th><th>Level</th><th>Status</th></tr></thead>
               <tbody>
                 {users.slice(0,5).map(u=>(
-                  <tr key={u.id}><td>@{u.username} ({u.first_name})</td><td>{u.balance} • ৳{(u.balance/1000*5).toFixed(0)}</td><td>{u.adsToday}</td><td>{u.level}</td><td>{u.banned?'🔴 Banned':'🟢 Active'}</td></tr>
+                  <tr key={u.id}><td>@{u.username} ({u.first_name})</td><td>{u.balance} • ৳{(u.balance/1000*4).toFixed(0)}</td><td>{u.adsToday}</td><td>{u.level}</td><td>{u.banned?'🔴 Banned':'🟢 Active'}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -238,7 +238,7 @@ export default function App() {
                   <tr key={u.id} style={u.banned?{opacity:0.5, background:'rgba(255,59,92,0.06)'}:{}}>
                     <td><code style={{fontSize:11}}>{u.id}</code></td>
                     <td><b>@{u.username}</b><br/><span style={{fontSize:11, color:'#8B92B8'}}>{u.first_name}</span></td>
-                    <td><b>{u.balance}</b><br/><span style={{fontSize:11, color:'#00D68F'}}>৳{(u.balance/1000*5).toFixed(0)}</span></td>
+                    <td><b>{u.balance}</b><br/><span style={{fontSize:11, color:'#00D68F'}}>৳{(u.balance/1000*4).toFixed(0)}</span></td>
                     <td>{u.adsToday}/30</td>
                     <td>{u.spinsLeft}</td>
                     <td>{u.streak}</td>
@@ -265,7 +265,7 @@ export default function App() {
               {withdraws.map(w=>(
                 <tr key={w.id} style={w.status==='Pending'?{background:'rgba(255,184,0,0.06)'}:{}}>
                   <td>@{w._username} ({w._name})<br/><code style={{fontSize:10}}>{w._userId}</code></td>
-                  <td><b>{w.amount}</b> = ৳{(w.amount/1000*5).toFixed(0)}</td>
+                  <td><b>{w.amount}</b> = ৳{(w.amount/1000*4).toFixed(0)}</td>
                   <td>{w.method}</td>
                   <td>{w.date}</td>
                   <td><span style={{padding:'3px 8px', borderRadius:999, fontSize:11, fontWeight:700, background: w.status==='Paid'?'#00D68F':w.status==='Rejected'?'#FF3B5C':'#FFB800', color: w.status==='Pending'?'#000':'white'}}>{w.status}</span></td>

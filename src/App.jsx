@@ -14,8 +14,8 @@ const AD_ZONE_ID = '11718341'
 const COIN_PER_AD = 50
 const DAILY_REWARDS = [50,100,150,250,400,600,1000]
 const WITHDRAW_MIN = 10000
-const RATE_USD_PER_1000 = 0.045 // 1000 coin = 5 Taka ($0.045) - BD profit
-const RATE_TK_PER_1000 = 5
+const RATE_USD_PER_1000 = 0.036 // 1000 coin = 4 Taka ($0.036) - No-loss
+const RATE_TK_PER_1000 = 4
 
 function loadState() {
   try { return JSON.parse(localStorage.getItem('earnapp_state') || 'null') } catch { return null }
@@ -719,7 +719,7 @@ export default function App() {
                 <button className="btn-primary" onClick={()=>setShowWithdraw(true)} style={{padding:'12px', gap:6}}><IconWithdraw size={16} /> Withdraw</button>
                 <button className="btn-secondary" style={{justifyContent:'center', gap:6}} onClick={()=>showToast('History below')}><IconClock size={14} /> History</button>
               </div>
-              <div style={{fontSize:11, color:'#8B92B8', marginTop:10, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Min withdraw: {WITHDRAW_MIN.toLocaleString()} coins = ৳{(WITHDRAW_MIN/1000*RATE_TK_PER_1000)} Taka • 1000 Coins = 5 Taka</div>
+              <div style={{fontSize:11, color:'#8B92B8', marginTop:10, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Min withdraw: {WITHDRAW_MIN.toLocaleString()} coins = ৳{(WITHDRAW_MIN/1000*RATE_TK_PER_1000)} Taka • 1000 Coins = {RATE_TK_PER_1000} Taka</div>
             </div>
 
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, margin:'0 16px'}}>
@@ -772,7 +772,7 @@ export default function App() {
         <div className="modal-overlay" onClick={()=>setShowWithdraw(false)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <h3 style={{fontWeight:800, fontSize:18, display:'flex', alignItems:'center', gap:8}}><CoinSVG size={24} /> Withdraw</h3>
-            <p style={{color:'#8B92B8', fontSize:13, marginTop:4, display:'flex', alignItems:'center', gap:4}}>Balance: {balance.toLocaleString()} coins = ৳{tkValue.toFixed(0)} Taka <span style={{fontSize:11, opacity:0.7}}>1000 = 5 Taka</span></p>
+            <p style={{color:'#8B92B8', fontSize:13, marginTop:4, display:'flex', alignItems:'center', gap:4}}>Balance: {balance.toLocaleString()} coins = ৳{tkValue.toFixed(0)} Taka <span style={{fontSize:11, opacity:0.7}}>1000 = {RATE_TK_PER_1000} Taka</span></p>
             
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:16}}>
               {['bKash','Nagad','USDT'].map(m=>(

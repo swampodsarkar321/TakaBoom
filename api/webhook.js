@@ -46,7 +46,7 @@ export default async function handler(req, res) {
           `👥  *Invite Friends* → 500 Coins + 15% Lifetime\n` +
           `💳  *Instant Withdraw* → bKash / Nagad / USDT\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
-          `💰 *Rate: 1000 Coins = 5 Taka* (Min withdraw 10000 = 50 Taka)\n` +
+          `💰 *Rate: 1000 Coins = 4 Taka* (Min withdraw 10000 = 40 Taka)\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
           `⚡ *Direct Login:* Your Telegram username \`${username}\` auto-connected!\n` +
           `No password needed — just tap Open! 👇\n\n` +
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
                 text: `📊 *Your TakaBoom Stats* for ${username}\n\n` +
                       `🆔 ID: \`${from.id}\`\n` +
                       `👤 Username: ${username} ✅ Verified\n` +
-                      `💰 Balance: 0 Coins (0 Taka) • 1000 = 5 Taka\n` +
+                      `💰 Balance: 0 Coins (0 Taka) • 1000 = 4 Taka\n` +
                       `🏆 Level: 1 | Streak: 0 days\n\n` +
                       `💡 *Tip:* Watch ads & invite friends to earn!`,
                 parse_mode: 'Markdown',
@@ -112,8 +112,8 @@ export default async function handler(req, res) {
           `• Daily Check-in = 50-1000 coins\n` +
           `• Spin = 1 free daily, win up to 500\n` +
           `• Vault Claim = Watch ad to claim\n` +
-          `• Rate: 1000 Coins = 5 Taka\n` +
-          `• Min withdraw 10000 coins = 50 Taka\n\n` +
+          `• Rate: 1000 Coins = 4 Taka\n` +
+          `• Min withdraw 10000 coins = 40 Taka\n\n` +
           `🔒 Username \`${username}\` auto-connected to Web App!\n` +
           `Support: @BoomTakaBd_bot`
 
