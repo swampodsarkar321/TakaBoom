@@ -42,7 +42,11 @@ export default function App() {
   const [spinDeg, setSpinDeg] = useState(0)
   const [spinsLeft, setSpinsLeft] = useState(() => loadState()?.spinsLeft ?? 1)
   const [miningBoost, setMiningBoost] = useState(() => loadState()?.miningBoost ?? 1)
-  const [miningClaimable, setMiningClaimable] = useState(0)
+  const [miningClaimable, setMiningClaimable] = useState(() => loadState()?.miningClaimable ?? 0)
+  const [miningActive, setMiningActive] = useState(() => loadState()?.miningActive ?? false)
+  const [miningStart, setMiningStart] = useState(() => loadState()?.miningStart ?? null)
+  const [miningEnd, setMiningEnd] = useState(() => loadState()?.miningEnd ?? null)
+  const [miningTimeLeft, setMiningTimeLeft] = useState('')
   const [fbLoaded, setFbLoaded] = useState(false)
   const [fbStatus, setFbStatus] = useState('connecting')
 
@@ -58,8 +62,8 @@ export default function App() {
   const [leaderboard, setLeaderboard] = useState([])
 
   useEffect(() => {
-    saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals })
-  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals])
+    saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable })
+  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable])
 
   // Firebase Realtime DB - Direct Telegram username system, all data save in real time
   useEffect(() => {
@@ -77,6 +81,10 @@ export default function App() {
         if (d.adsToday !== undefined) setAdsToday(d.adsToday)
         if (d.spinsLeft !== undefined) setSpinsLeft(d.spinsLeft)
         if (d.miningBoost !== undefined) setMiningBoost(d.miningBoost)
+        if (d.miningActive !== undefined) setMiningActive(d.miningActive)
+        if (d.miningStart !== undefined) setMiningStart(d.miningStart)
+        if (d.miningEnd !== undefined) setMiningEnd(d.miningEnd)
+        if (d.miningClaimable !== undefined) setMiningClaimable(d.miningClaimable)
         if (d.tasks) setTasks(d.tasks)
         // Fix dummy withdraw - remove fake 5000 Paid 2025-08-28
         if (d.withdraws) {
@@ -100,7 +108,7 @@ export default function App() {
           username: user.username || '',
           first_name: user.first_name || '',
           photo_url: user.photo_url || '',
-          balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals,
+          balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals, miningActive, miningStart, miningEnd, miningClaimable,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }).then(()=> setFbStatus('connected')).catch(()=> setFbStatus('error'))
@@ -119,7 +127,7 @@ export default function App() {
     const uref = userRef(user.id)
     const t = setTimeout(() => {
       update(uref, {
-        balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals,
+        balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals, miningActive, miningStart, miningEnd, miningClaimable,
         username: user.username || '',
         first_name: user.first_name || '',
         photo_url: user.photo_url || '',
@@ -130,7 +138,7 @@ export default function App() {
       })
     }, 600)
     return () => clearTimeout(t)
-  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals, fbLoaded, user?.id, user?.username])
+  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals, miningActive, miningStart, miningEnd, miningClaimable, fbLoaded, user?.id, user?.username])
 
   useEffect(() => {
     if (adCooldown <=0) return
@@ -138,11 +146,38 @@ export default function App() {
     return ()=> clearTimeout(t)
   }, [adCooldown])
 
-  // mining accrual simulation
+  // 3 Hour Background Mining - ad to start, continues even if app closed (via Firebase timestamps)
   useEffect(() => {
-    const t = setInterval(()=> setMiningClaimable(c=> Math.min(c+1, 500)), 3000)
-    return ()=> clearInterval(t)
-  }, [])
+    if (!miningActive || !miningStart || !miningEnd) {
+      if (!miningActive) setMiningTimeLeft('')
+      return
+    }
+    const updateMining = () => {
+      const now = Date.now()
+      const end = new Date(miningEnd).getTime()
+      const start = new Date(miningStart).getTime()
+      const diff = end - now
+      if (diff <= 0) {
+        setMiningTimeLeft('00:00:00')
+        // keep claimable at max, mining finished - need ad to restart
+        const maxCoins = 600
+        setMiningClaimable(maxCoins)
+        return
+      }
+      const hours = Math.floor(diff / 3600000)
+      const minutes = Math.floor((diff % 3600000) / 60000)
+      const seconds = Math.floor((diff % 60000) / 1000)
+      setMiningTimeLeft(`${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`)
+      const elapsed = now - start
+      const rateMs = 15000 / miningBoost // 15s per coin at x1
+      const maxCoins = 600
+      const earned = Math.min(Math.floor(elapsed / rateMs), maxCoins)
+      setMiningClaimable(earned)
+    }
+    updateMining()
+    const t = setInterval(updateMining, 1000)
+    return () => clearInterval(t)
+  }, [miningActive, miningStart, miningEnd, miningBoost])
 
   // In-App Interstitial - Best Fit: Auto passive, no reward, timeframe 2 ads per 6min
   useEffect(() => {
@@ -292,10 +327,48 @@ export default function App() {
     }
   }
 
+  const handleStartMining = async () => {
+    if (miningActive) return showToast('Mining already running: ' + miningTimeLeft)
+    haptic('medium')
+    try {
+      await showRewardedInterstitial(AD_ZONE_ID)
+      const now = new Date().toISOString()
+      const end = new Date(Date.now() + 3*60*60*1000).toISOString()
+      setMiningActive(true)
+      setMiningStart(now)
+      setMiningEnd(end)
+      setMiningClaimable(0)
+      setMiningTimeLeft('03:00:00')
+      setAdsToday(a=>a+1)
+      showToast('Mining started for 3 hours!')
+    } catch (e) {
+      console.error('Mining ad failed', e)
+      showToast(e?.message?.includes('not loaded') ? 'Ad blocked: whitelist takaboom.vercel.app' : 'Ad not ready')
+    }
+  }
+
   const handleMiningClaim = () => {
-    if (miningClaimable < 10) return showToast('Mining… come back later')
-    addCoins(miningClaimable, 'Mining Claim')
-    setMiningClaimable(0)
+    if (!miningActive && miningClaimable === 0) return showToast('Start mining first - Watch Ad for 3 hours')
+    if (miningClaimable < 5) return showToast('Mining... wait for 5+ coins')
+    const claimAmt = miningClaimable
+    addCoins(claimAmt, 'Mining Claim')
+    // After claim, mining finishes - need ad to restart for next 3 hours (background continues via Firebase)
+    const now = Date.now()
+    const end = miningEnd ? new Date(miningEnd).getTime() : 0
+    if (now >= end || claimAmt >= 600) {
+      // 3 hours finished, reset
+      setMiningActive(false)
+      setMiningStart(null)
+      setMiningEnd(null)
+      setMiningClaimable(0)
+      setMiningTimeLeft('')
+    } else {
+      // Keep mining but reset claimable - adjust start to now for next cycle
+      setMiningClaimable(0)
+      setMiningStart(new Date().toISOString())
+      setMiningEnd(new Date(Date.now() + 3*60*60*1000).toISOString())
+      setMiningTimeLeft('03:00:00')
+    }
   }
 
   const handleWithdraw = () => {
@@ -352,26 +425,31 @@ export default function App() {
               </div>
             </div>
 
-            {/* Mining World Best Feature */}
+            {/* Mining - 3 Hour Background, Ad to Start */}
             <div className="card" style={{background:'linear-gradient(135deg,#0F1F3A,#1A2040)', borderColor:'#2A3A6A', position:'relative', overflow:'hidden'}}>
               <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
                 <div style={{display:'flex', alignItems:'center', gap:10}}>
                   <div style={{width:42,height:42, borderRadius:12, background:'linear-gradient(135deg,#00E5CC,#6C5CFF)', display:'grid', placeItems:'center'}}><IconZap size={20} /></div>
                   <div>
-                    <div style={{fontWeight:800, fontSize:14, display:'flex', alignItems:'center', gap:6}}>Mining Boost <span style={{background:'rgba(0,229,204,0.15)', color:'#00E5CC', fontSize:10, padding:'2px 6px', borderRadius:6, border:'1px solid rgba(0,229,204,0.3)'}}>x{miningBoost}</span></div>
-                    <div style={{fontSize:11, color:'#8B92B8'}}>Auto mining every 3 sec</div>
+                    <div style={{fontWeight:800, fontSize:14, display:'flex', alignItems:'center', gap:6}}>Taka Vault <span style={{background:'rgba(0,229,204,0.15)', color:'#00E5CC', fontSize:10, padding:'2px 6px', borderRadius:6, border:'1px solid rgba(0,229,204,0.3)'}}>x{miningBoost}</span> {miningActive && <span style={{background:'rgba(255,184,0,0.15)', color:'#FFB800', fontSize:10, padding:'2px 6px', borderRadius:6}}>● {miningTimeLeft}</span>}</div>
+                    <div style={{fontSize:11, color:'#8B92B8'}}>{miningActive ? 'Background mining - app kete dileo cholbe' : 'Watch Ad to start 3 hours mining'}</div>
                   </div>
                 </div>
                 <button onClick={()=>{ if(balance>=1000){ setBalance(b=>b-1000); setMiningBoost(b=>b+1); showToast('Boost upgraded to x'+(miningBoost+1)) } else showToast('Need 1000 coins')}} className="btn-secondary" style={{padding:'8px 12px', fontSize:12}}><IconZap size={14} /> Boost</button>
               </div>
-              <div style={{display:'flex', alignItems:'center', gap:12, marginTop:14, background:'rgba(0,0,0,0.25)', borderRadius:12, padding:12, border:'1px solid rgba(255,255,255,0.06)'}}>
-                <CoinSVG size={36} />
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:800, fontSize:15, display:'flex', alignItems:'center', gap:6}}>{miningClaimable} <span style={{fontWeight:600, fontSize:12, color:'#8B92B8'}}>coins ready</span></div>
-                  <div style={{height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, overflow:'hidden', marginTop:6}}><div style={{width: `${Math.min(miningClaimable/500*100,100)}%`, height:'100%', background:'linear-gradient(90deg,#FFB800,#FF8C00)', transition:'width 0.5s'}}></div></div>
+              {miningActive ? (
+                <div style={{display:'flex', alignItems:'center', gap:12, marginTop:14, background:'rgba(0,0,0,0.25)', borderRadius:12, padding:12, border:'1px solid rgba(255,255,255,0.06)'}}>
+                  <CoinSVG size={36} />
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:800, fontSize:15, display:'flex', alignItems:'center', gap:6}}>{miningClaimable} <span style={{fontWeight:600, fontSize:12, color:'#8B92B8'}}>coins ready • {miningTimeLeft} left</span></div>
+                    <div style={{height:6, background:'rgba(255,255,255,0.08)', borderRadius:999, overflow:'hidden', marginTop:6}}><div style={{width: `${Math.min(miningClaimable/600*100,100)}%`, height:'100%', background:'linear-gradient(90deg,#FFB800,#FF8C00)', transition:'width 0.5s'}}></div></div>
+                  </div>
+                  <button onClick={handleMiningClaim} className="btn-primary" style={{width:'auto', padding:'10px 16px', fontSize:13}}>Claim</button>
                 </div>
-                <button onClick={handleMiningClaim} className="btn-primary" style={{width:'auto', padding:'10px 16px', fontSize:13}}>Claim</button>
-              </div>
+              ) : (
+                <button onClick={handleStartMining} className="btn-primary" style={{marginTop:14, gap:6}}><IconVideo size={16} /> Watch Ad & Start Mining 3 Hours</button>
+              )}
+              <div style={{fontSize:10, color:'#8B92B8', textAlign:'center', marginTop:8, display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Ad dekhle 3 ghonta background mining, app bondho korleo cholbe</div>
             </div>
 
             <div className="stats-grid">
