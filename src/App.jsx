@@ -3,6 +3,7 @@ import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import { useTelegram } from './hooks/useTelegram.js'
 import { showRewardedAd, showRewardedPopup, showInAppInterstitial } from './lib/ads.js'
+import { db, userRef, get, set, update, onValue } from './lib/firebase.js'
 import {
   CoinSVG, CoinSmall, CoinTiny,
   IconVideo, IconFlame, IconGift, IconCheck, IconClock, IconTrophy, IconZap, IconMegaphone, IconTwitterX, IconGamepad, IconShield, IconWithdraw, IconCopy, IconSend, IconStar, IconPlay, IconSpin as IconSpinSvg
@@ -41,6 +42,8 @@ export default function App() {
   const [spinsLeft, setSpinsLeft] = useState(() => loadState()?.spinsLeft ?? 3)
   const [miningBoost, setMiningBoost] = useState(() => loadState()?.miningBoost ?? 1)
   const [miningClaimable, setMiningClaimable] = useState(86)
+  const [fbLoaded, setFbLoaded] = useState(false)
+  const [fbStatus, setFbStatus] = useState('connecting')
 
   const [tasks, setTasks] = useState(() => loadState()?.tasks ?? [
     { id:1, title:'Join Telegram Channel', reward:200, done:false, color:'#6C5CFF', link:'https://t.me/', iconType:'megaphone' },
@@ -64,6 +67,65 @@ export default function App() {
   useEffect(() => {
     saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost })
   }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost])
+
+  // Firebase Realtime DB - Direct Telegram username system, all data save in real time
+  useEffect(() => {
+    if (!user?.id) return
+    const uref = userRef(user.id)
+    setFbStatus('loading')
+    get(uref).then(snap => {
+      if (snap.exists()) {
+        const d = snap.val()
+        if (d.balance !== undefined) setBalance(d.balance)
+        if (d.level !== undefined) setLevel(d.level)
+        if (d.xp !== undefined) setXp(d.xp)
+        if (d.streak !== undefined) setStreak(d.streak)
+        if (d.lastCheckin !== undefined) setLastCheckin(d.lastCheckin)
+        if (d.adsToday !== undefined) setAdsToday(d.adsToday)
+        if (d.spinsLeft !== undefined) setSpinsLeft(d.spinsLeft)
+        if (d.miningBoost !== undefined) setMiningBoost(d.miningBoost)
+        if (d.tasks) setTasks(d.tasks)
+        if (d.withdraws) setWithdraws(d.withdraws)
+        setFbStatus('connected')
+        // showToast handled elsewhere to avoid spam
+      } else {
+        // First time user - create in Realtime DB with direct Telegram username
+        set(uref, {
+          id: user.id,
+          username: user.username || '',
+          first_name: user.first_name || '',
+          photo_url: user.photo_url || '',
+          balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }).then(()=> setFbStatus('connected')).catch(()=> setFbStatus('error'))
+      }
+      setFbLoaded(true)
+    }).catch(err => {
+      console.warn('Firebase load failed', err)
+      setFbStatus('error')
+      setFbLoaded(true)
+    })
+  }, [user?.id])
+
+  // Firebase auto-save on every change (real time)
+  useEffect(() => {
+    if (!fbLoaded || !user?.id) return
+    const uref = userRef(user.id)
+    const t = setTimeout(() => {
+      update(uref, {
+        balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws,
+        username: user.username || '',
+        first_name: user.first_name || '',
+        photo_url: user.photo_url || '',
+        updatedAt: new Date().toISOString()
+      }).then(()=> setFbStatus('connected')).catch(err => {
+        console.warn('Firebase save failed', err)
+        setFbStatus('error')
+      })
+    }, 600)
+    return () => clearTimeout(t)
+  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, fbLoaded, user?.id, user?.username])
 
   useEffect(() => {
     if (adCooldown <=0) return
@@ -205,7 +267,10 @@ export default function App() {
               <div style={{display:'flex', alignItems:'center', gap:8, marginBottom:10}}>
                 <div style={{background:'linear-gradient(135deg,#FFB800,#FF6B00)', color:'#000', fontWeight:900, fontSize:11, padding:'4px 10px', borderRadius:999, display:'flex', alignItems:'center', gap:5, letterSpacing:0.5}}><IconZap size={12} /> TAKA BOOM</div>
                 <span style={{fontSize:10, color:'#8B92B8', fontWeight:700, letterSpacing:1}}>WORLD BEST EARNING APP</span>
-                <span style={{marginLeft:'auto', background:'rgba(0,229,204,0.12)', color:'#00E5CC', fontSize:10, padding:'3px 8px', borderRadius:999, border:'1px solid rgba(0,229,204,0.25)', fontWeight:800}}>LIVE</span>
+                <span style={{marginLeft:'auto', background: fbStatus==='connected' ? 'rgba(0,214,143,0.12)' : 'rgba(255,184,0,0.12)', color: fbStatus==='connected' ? '#00D68F' : '#FFB800', fontSize:10, padding:'3px 8px', borderRadius:999, border: `1px solid ${fbStatus==='connected' ? 'rgba(0,214,143,0.25)' : 'rgba(255,184,0,0.25)'}`, fontWeight:800, display:'flex', alignItems:'center', gap:4}}>
+                  <span style={{width:6,height:6, borderRadius:'50%', background: fbStatus==='connected' ? '#00D68F' : '#FFB800', display:'inline-block'}}></span>
+                  {fbStatus==='connected' ? 'DB Connected' : fbStatus==='loading' ? 'Syncing...' : fbStatus==='error' ? 'Offline' : 'LIVE'}
+                </span>
               </div>
               <div style={{display:'flex', alignItems:'center', gap:14}}>
                 <div className="coin-icon" style={{background:'none', boxShadow:'none', borderRadius:0}}><CoinSVG size={62} /></div>
