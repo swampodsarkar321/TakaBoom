@@ -1,3 +1,5 @@
+import { CoinSmall } from './Icons.jsx'
+
 export default function Header({ user, balance, level }) {
   const initials = (user?.first_name?.[0] || 'U').toUpperCase()
   return (
@@ -11,7 +13,8 @@ export default function Header({ user, balance, level }) {
         <span className="level-badge">LVL {level}</span>
       </div>
       <div className="balance-top">
-        <span style={{fontSize:16}}>🪙</span> {balance.toLocaleString()}
+        <CoinSmall size={20} />
+        <span>{balance.toLocaleString()}</span>
       </div>
     </div>
   )

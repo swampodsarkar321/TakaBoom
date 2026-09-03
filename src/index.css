@@ -65,10 +65,8 @@ body {
   pointer-events:none;
 }
 .coin-icon {
-  width:56px; height:56px; border-radius:50%;
-  background: linear-gradient(135deg,#FFD600,#FF8C00);
-  display:grid; place-items:center; font-size:28px;
-  box-shadow: 0 8px 24px rgba(255,184,0,0.35);
+  width:62px; height:62px; display:grid; place-items:center;
+  filter: drop-shadow(0 8px 16px rgba(255,184,0,0.35));
   animation: float 3s ease-in-out infinite;
 }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
