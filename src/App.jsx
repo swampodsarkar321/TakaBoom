@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import { useTelegram } from './hooks/useTelegram.js'
@@ -78,7 +78,18 @@ export default function App() {
         if (d.spinsLeft !== undefined) setSpinsLeft(d.spinsLeft)
         if (d.miningBoost !== undefined) setMiningBoost(d.miningBoost)
         if (d.tasks) setTasks(d.tasks)
-        if (d.withdraws) setWithdraws(d.withdraws)
+        // Fix dummy withdraw - remove fake 5000 Paid 2025-08-28
+        if (d.withdraws) {
+          const isDummy = d.withdraws.length===1 && d.withdraws[0].id===1 && d.withdraws[0].amount===5000 && d.withdraws[0].date==="2025-08-28"
+          if (isDummy) {
+            setWithdraws([])
+            // also clear in Firebase next auto-save will push []
+          } else {
+            setWithdraws(d.withdraws)
+          }
+        } else {
+          setWithdraws([])
+        }
         if (d.referrals !== undefined) setReferrals(d.referrals)
         setFbStatus('connected')
         // showToast handled elsewhere to avoid spam
@@ -183,7 +194,31 @@ export default function App() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(()=> setToast(null), 2200) }
 
+  // Anti-attack: rate limit & max reward check
+  const lastEarnRef = useRef({ time: 0, count: 0 })
   const addCoins = (amount, reason) => {
+    // Block huge rewards (max single reward is 1500)
+    if (amount > 1500) {
+      console.warn('[Anti-Attack] Blocked huge amount', amount)
+      showToast('Fraud detected')
+      return
+    }
+    // Rate limit: max 5 rewards per 10 seconds
+    const now = Date.now()
+    if (now - lastEarnRef.current.time < 10000) {
+      lastEarnRef.current.count += 1
+      if (lastEarnRef.current.count > 5) {
+        showToast('Too fast! Slow down')
+        return
+      }
+    } else {
+      lastEarnRef.current = { time: now, count: 1 }
+    }
+    // Block if balance would be unrealistic without ads (e.g., 100k with 0 ads)
+    if (amount > 0 && adsToday === 0 && balance > 5000) {
+      console.warn('[Anti-Attack] Suspicious balance without ads')
+    }
+
     setBalance(b=> b+amount)
     setXp(x=> {
       const nx = x + Math.floor(amount/10)
