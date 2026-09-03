@@ -302,23 +302,43 @@ export default function App() {
     finally { setIsAdLoading(false) }
   }
 
-  const handleCheckin = () => {
+  const handleCheckin = async () => {
     const today = new Date().toDateString()
     if (lastCheckin === today) return showToast('Already checked in today')
-    const nextStreak = lastCheckin ? streak+1 : 1
-    const reward = DAILY_REWARDS[Math.min(nextStreak-1, DAILY_REWARDS.length-1)]
-    setStreak(nextStreak)
-    setLastCheckin(today)
-    addCoins(reward, `Day ${nextStreak}`)
+    if (adCooldown>0) return showToast(`Wait ${adCooldown}s for ad`)
+    haptic('medium')
+    try {
+      await showRewardedInterstitial(AD_ZONE_ID)
+      const nextStreak = lastCheckin ? streak+1 : 1
+      const reward = DAILY_REWARDS[Math.min(nextStreak-1, DAILY_REWARDS.length-1)]
+      setStreak(nextStreak)
+      setLastCheckin(today)
+      addCoins(reward, `Day ${nextStreak}`)
+      setAdsToday(a=>a+1)
+      setAdCooldown(15)
+    } catch (e) {
+      showToast(e?.message?.includes('not loaded') ? 'Ad blocked: whitelist takaboom.vercel.app' : 'Ad not ready, try again')
+    }
   }
 
-  const handleTask = (task) => {
+  const handleTask = async (task) => {
     if (task.done) return
-    if (task.link) window.open(task.link, '_blank')
-    setTimeout(()=>{
+    if (adCooldown>0) return showToast(`Wait ${adCooldown}s for ad`)
+    haptic('medium')
+    // Restrictions: Must watch ad to earn task reward
+    try {
+      if (task.link) window.open(task.link, '_blank')
+      await showRewardedInterstitial(AD_ZONE_ID)
       setTasks(ts=> ts.map(t=> t.id===task.id ? {...t, done:true} : t))
       addCoins(task.reward, task.title)
-    }, 600)
+      setAdsToday(a=>a+1)
+      setAdCooldown(15)
+      if (task.id===3) {
+        // Watch 5 Ads task is ad-gated itself
+      }
+    } catch (e) {
+      showToast(e?.message?.includes('not loaded') ? 'Ad blocked' : 'Watch full ad to earn reward')
+    }
   }
 
   const handleSpin = () => {
@@ -506,10 +526,10 @@ export default function App() {
               <div className="card-header">
                 <div>
                   <div className="card-title" style={{display:'flex', alignItems:'center', gap:6}}><IconStar size={14} /> Daily Check-in</div>
-                  <div className="card-subtitle">Come back every day for bonus</div>
+                  <div className="card-subtitle">Must watch ad to claim daily bonus</div>
                 </div>
                 <button className="btn-secondary" onClick={handleCheckin} disabled={!canCheckin} style={{opacity: canCheckin?1:0.5, gap:6}}>
-                  {canCheckin ? <><IconGift size={14} /> Claim Day {Math.min(streak+1,7)}</> : <><IconCheck size={14} /> Done</>}
+                  {canCheckin ? <><IconVideo size={14} /> Watch Ad +{DAILY_REWARDS[Math.min(streak, DAILY_REWARDS.length-1)]} </> : <><IconCheck size={14} /> Done</>}
                 </button>
               </div>
               <div className="checkin-grid">
@@ -578,7 +598,7 @@ export default function App() {
                   <div style={{flex:1}}>
                     <div style={{fontWeight:700, fontSize:14}}>{t.title}</div>
                     <div style={{fontSize:12, color:'#8B92B8'}}>
-                      {t.total ? `${t.progress||0}/${t.total} completed` : t.done ? 'Completed' : 'Tap to complete'}
+                      {t.done ? 'Completed ✓' : t.total ? `${t.progress||0}/${t.total} • Watch Ad to claim` : 'Watch Ad to earn'}
                     </div>
                   </div>
                   <div className="task-reward" style={{display:'flex', alignItems:'center', gap:4}}>
