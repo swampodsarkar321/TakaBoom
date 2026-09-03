@@ -3,7 +3,7 @@ import Header from './components/Header.jsx'
 import BottomNav from './components/BottomNav.jsx'
 import { useTelegram } from './hooks/useTelegram.js'
 import { showRewardedAd, showRewardedPopup, showInAppInterstitial } from './lib/ads.js'
-import { db, userRef, get, set, update, onValue } from './lib/firebase.js'
+import { db, userRef, ref, get, set, update, onValue, off } from './lib/firebase.js'
 import {
   CoinSVG, CoinSmall, CoinTiny,
   IconVideo, IconFlame, IconGift, IconCheck, IconClock, IconTrophy, IconZap, IconMegaphone, IconTwitterX, IconGamepad, IconShield, IconWithdraw, IconCopy, IconSend, IconStar, IconPlay, IconSpin as IconSpinSvg
@@ -54,13 +54,7 @@ export default function App() {
   ])
   const [referrals, setReferrals] = useState(() => loadState()?.referrals ?? 0)
   const [withdraws, setWithdraws] = useState(() => loadState()?.withdraws ?? [])
-  const [leaderboard] = useState([
-    { name:'Alex Max', coins:45230, avatar:'AM' },
-    { name:'Sara Khan', coins:38900, avatar:'SK' },
-    { name:'Minhaj Uddin', coins:34100, avatar:'MU' },
-    { name:'You', coins: 0, avatar:'YO', isYou:true },
-    { name:'Crypto King', coins:28900, avatar:'CK' },
-  ])
+  const [leaderboard, setLeaderboard] = useState([])
 
   useEffect(() => {
     saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals })
@@ -151,6 +145,40 @@ export default function App() {
     }, 5000) // 5s delay before first auto ad
     return () => clearTimeout(timer)
   }, [])
+
+  // Real Leaderboard - no dummy, from Firebase Realtime DB
+  useEffect(() => {
+    const lbRef = ref(db, 'takaboom/users')
+    const unsub = onValue(lbRef, (snap) => {
+      if (!snap.exists()) { setLeaderboard([]); return }
+      const users = Object.values(snap.val())
+      const sorted = users
+        .filter(u => u.id)
+        .sort((a,b) => (b.balance||0) - (a.balance||0))
+        .slice(0, 20)
+        .map(u => ({
+          name: u.first_name || u.username || 'User',
+          username: u.username || '',
+          coins: u.balance || 0,
+          avatar: (u.first_name?.[0] || u.username?.[0] || 'U').toUpperCase(),
+          id: u.id,
+          isYou: String(u.id) === String(user?.id)
+        }))
+      // Ensure current user visible even if not top 20
+      if (user?.id && !sorted.find(x => String(x.id)===String(user.id))) {
+        sorted.push({
+          name: user.first_name || 'You',
+          username: user.username || '',
+          coins: balance,
+          avatar: (user.first_name?.[0] || 'Y').toUpperCase(),
+          id: user.id,
+          isYou: true
+        })
+      }
+      setLeaderboard(sorted)
+    })
+    return () => off(lbRef)
+  }, [user?.id, balance])
 
   const showToast = (msg) => { setToast(msg); setTimeout(()=> setToast(null), 2200) }
 
