@@ -60,6 +60,8 @@ export default function App() {
   const [referrals, setReferrals] = useState(() => loadState()?.referrals ?? 0)
   const [withdraws, setWithdraws] = useState(() => loadState()?.withdraws ?? [])
   const [leaderboard, setLeaderboard] = useState([])
+  const [isBanned, setIsBanned] = useState(false)
+  const [globalMsg, setGlobalMsg] = useState(null)
 
   useEffect(() => {
     saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable })
@@ -99,6 +101,7 @@ export default function App() {
           setWithdraws([])
         }
         if (d.referrals !== undefined) setReferrals(d.referrals)
+        if (d.banned) setIsBanned(true); else setIsBanned(false)
         setFbStatus('connected')
         // showToast handled elsewhere to avoid spam
       } else {
@@ -226,6 +229,19 @@ export default function App() {
     })
     return () => off(lbRef)
   }, [user?.id, balance])
+
+  // Global notification from admin
+  useEffect(() => {
+    const gRef = ref(db, 'takaboom/global')
+    const unsub = onValue(gRef, snap => {
+      if (snap.exists() && snap.val().message) {
+        setGlobalMsg(snap.val().message)
+      } else {
+        setGlobalMsg(null)
+      }
+    })
+    return () => off(gRef)
+  }, [])
 
   const showToast = (msg) => { setToast(msg); setTimeout(()=> setToast(null), 2200) }
 
@@ -398,8 +414,26 @@ export default function App() {
     return <div style={bg}><IconZap size={18} /></div>
   }
 
+  if (isBanned) {
+    return (
+      <div style={{minHeight:'100vh', display:'grid', placeItems:'center', padding:24, textAlign:'center', background:'#070A14', color:'white'}}>
+        <div style={{background:'#11162A', border:'1px solid #242E5A', borderRadius:20, padding:32, maxWidth:360}}>
+          <div style={{fontSize:48, marginBottom:12}}>🚫</div>
+          <div style={{fontWeight:800, fontSize:20}}>Account Banned</div>
+          <div style={{color:'#8B92B8', fontSize:13, marginTop:8, lineHeight:1.6}}>Your TakaBoom account has been banned for violating terms. Contact @BoomTakaBd_bot</div>
+          <div style={{fontSize:11, color:'#FF3B5C', marginTop:12}}>ID: {user?.id} • @{user?.username}</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
+      {globalMsg && (
+        <div style={{background:'linear-gradient(135deg,#FFB800,#FF6B00)', color:'#000', padding:'10px 12px', textAlign:'center', fontWeight:700, fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', gap:8, position:'sticky', top:0, zIndex:60}}>
+          📢 {globalMsg} <span onClick={()=>setGlobalMsg(null)} style={{marginLeft:8, cursor:'pointer', background:'rgba(0,0,0,0.15)', padding:'2px 8px', borderRadius:999, fontSize:11}}>✕</span>
+        </div>
+      )}
       <Header user={user} balance={balance} level={level} />
 
       <div className="content">
