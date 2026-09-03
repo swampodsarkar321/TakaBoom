@@ -13,8 +13,9 @@ import {
 const AD_ZONE_ID = '11718341'
 const COIN_PER_AD = 50
 const DAILY_REWARDS = [50,100,150,250,400,600,1000]
-const WITHDRAW_MIN = 5000
-const RATE_USD_PER_1000 = 0.12
+const WITHDRAW_MIN = 10000
+const RATE_USD_PER_1000 = 0.045 // 1000 coin = 5 Taka ($0.045) - BD profit
+const RATE_TK_PER_1000 = 5
 
 function loadState() {
   try { return JSON.parse(localStorage.getItem('earnapp_state') || 'null') } catch { return null }
@@ -275,6 +276,7 @@ export default function App() {
 
   const progressPct = Math.min((xp/1000)*100, 100)
   const usdValue = (balance/1000)*RATE_USD_PER_1000
+  const tkValue = (balance/1000)*RATE_TK_PER_1000
   const todayStr = new Date().toDateString()
   const canCheckin = lastCheckin !== todayStr
 
@@ -304,7 +306,7 @@ export default function App() {
                 <div className="coin-icon" style={{background:'none', boxShadow:'none', borderRadius:0}}><CoinSVG size={62} /></div>
                 <div>
                   <div className="hero-balance">{balance.toLocaleString()} <span>COINS</span></div>
-                  <div className="usd"><CoinTiny size={12} /> ≈ ${usdValue.toFixed(2)} USD • Level {level}</div>
+                  <div className="usd"><CoinTiny size={12} /> ≈ ৳{tkValue.toFixed(0)} Taka • Level {level} <span style={{opacity:0.7, fontSize:11}}>(${(usdValue).toFixed(2)})</span></div>
                 </div>
               </div>
               <div className="progress-wrap">
@@ -545,18 +547,18 @@ export default function App() {
             <div className="hero" style={{background:'linear-gradient(135deg,#11162A,#1A2040)'}}>
               <div style={{fontSize:12, color:'#8B92B8', letterSpacing:1, fontWeight:700, display:'flex', alignItems:'center', gap:6}}><IconShield size={12} /> TOTAL BALANCE</div>
               <div className="hero-balance" style={{marginTop:6, display:'flex', alignItems:'center', gap:8}}><CoinSVG size={36} /> {balance.toLocaleString()} <span>COINS</span></div>
-              <div style={{color:'#00D68F', fontSize:14, fontWeight:700, marginTop:4, display:'flex', alignItems:'center', gap:6}}><CoinTiny size={12} />≈ ${usdValue.toFixed(2)} USD</div>
+              <div style={{color:'#00D68F', fontSize:14, fontWeight:700, marginTop:4, display:'flex', alignItems:'center', gap:6}}><CoinTiny size={12} />≈ ৳{tkValue.toFixed(0)} Taka <span style={{fontSize:11, opacity:0.7}}>(${(usdValue).toFixed(2)})</span></div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:16}}>
                 <button className="btn-primary" onClick={()=>setShowWithdraw(true)} style={{padding:'12px', gap:6}}><IconWithdraw size={16} /> Withdraw</button>
                 <button className="btn-secondary" style={{justifyContent:'center', gap:6}} onClick={()=>showToast('History below')}><IconClock size={14} /> History</button>
               </div>
-              <div style={{fontSize:11, color:'#8B92B8', marginTop:10, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Min withdraw: {WITHDRAW_MIN.toLocaleString()} coins (≈ ${(WITHDRAW_MIN/1000*RATE_USD_PER_1000).toFixed(2)})</div>
+              <div style={{fontSize:11, color:'#8B92B8', marginTop:10, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Min withdraw: {WITHDRAW_MIN.toLocaleString()} coins = ৳{(WITHDRAW_MIN/1000*RATE_TK_PER_1000)} Taka • 1000 Coins = 5 Taka</div>
             </div>
 
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, margin:'0 16px'}}>
               {[
-                {name:'bKash', color:'#E2136E', min:'5000'},
-                {name:'Nagad', color:'#FF6B00', min:'5000'},
+                {name:'bKash', color:'#E2136E', min:'10000'},
+                {name:'Nagad', color:'#FF6B00', min:'10000'},
                 {name:'USDT', color:'#00D68F', min:'10000'},
               ].map(m=>(
                 <div key={m.name} className="stat-card" onClick={()=>{setWithdrawMethod(m.name); setShowWithdraw(true)}} style={{cursor:'pointer', borderColor: m.color+'40'}}>
@@ -577,7 +579,7 @@ export default function App() {
                       <div style={{fontWeight:700, display:'flex', alignItems:'center', gap:4}}><CoinTiny size={12} />{w.amount.toLocaleString()} Coins • {w.method}</div>
                       <div style={{fontSize:12, color:'#8B92B8'}}>{w.date} • <span style={{color: w.status==='Paid'?'#00D68F':'#FFB800', display:'inline-flex', alignItems:'center', gap:4}}>{w.status==='Paid'?<IconCheck size={10} />:<IconClock size={10} />} {w.status}</span></div>
                     </div>
-                    <div style={{fontWeight:700, color:'#8B92B8', display:'flex', alignItems:'center', gap:4}}><CoinTiny size={10} /> ${(w.amount/1000*RATE_USD_PER_1000).toFixed(2)}</div>
+                    <div style={{fontWeight:700, color:'#00D68F', display:'flex', alignItems:'center', gap:4}}>৳{(w.amount/1000*RATE_TK_PER_1000).toFixed(0)}</div>
                   </div>
                 ))
               }
@@ -603,7 +605,7 @@ export default function App() {
         <div className="modal-overlay" onClick={()=>setShowWithdraw(false)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <h3 style={{fontWeight:800, fontSize:18, display:'flex', alignItems:'center', gap:8}}><CoinSVG size={24} /> Withdraw</h3>
-            <p style={{color:'#8B92B8', fontSize:13, marginTop:4, display:'flex', alignItems:'center', gap:4}}>Balance: {balance.toLocaleString()} coins (<CoinTiny size={10} /> ${usdValue.toFixed(2)})</p>
+            <p style={{color:'#8B92B8', fontSize:13, marginTop:4, display:'flex', alignItems:'center', gap:4}}>Balance: {balance.toLocaleString()} coins = ৳{tkValue.toFixed(0)} Taka <span style={{fontSize:11, opacity:0.7}}>1000 = 5 Taka</span></p>
             
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:16}}>
               {['bKash','Nagad','USDT'].map(m=>(

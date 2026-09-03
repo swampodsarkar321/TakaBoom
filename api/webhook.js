@@ -28,7 +28,7 @@ export default async function handler(req, res) {
           referralBlock = `🎉 *Welcome Bonus: 50 Coins credited!*\n\n`
         }
 
-        // Beautiful classic message - TakaBoom premium style
+        // Beautiful classic message - TakaBoom premium style - 100% real, no fake
         const welcomeText =
           `💥 ━━━━━━━━━━━━━━ 💥\n` +
           `   💰 *T A K A  B O O M* 💰\n` +
@@ -45,10 +45,12 @@ export default async function handler(req, res) {
           `⛏️  *Taka Vault* → Auto Earn + Claim\n` +
           `👥  *Invite Friends* → 500 Coins + 15% Lifetime\n` +
           `💳  *Instant Withdraw* → bKash / Nagad / USDT\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `💰 *Rate: 1000 Coins = 5 Taka* (Min withdraw 10000 = 50 Taka)\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
           `⚡ *Direct Login:* Your Telegram username \`${username}\` auto-connected!\n` +
           `No password needed — just tap Open! 👇\n\n` +
-          `🔒 *100% Safe & Anti-Fraud Protected*`
+          `🔒 *100% Real & Anti-Fraud Protected*`
 
         const payload = {
           chat_id: chatId,
@@ -73,7 +75,7 @@ export default async function handler(req, res) {
           body: JSON.stringify(payload)
         })
 
-        // Also send a follow-up media-like stats card as second message after 0.5s
+        // Also send a follow-up stats card - real, no dummy
         setTimeout(async () => {
           try {
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -84,9 +86,9 @@ export default async function handler(req, res) {
                 text: `📊 *Your TakaBoom Stats* for ${username}\n\n` +
                       `🆔 ID: \`${from.id}\`\n` +
                       `👤 Username: ${username} ✅ Verified\n` +
-                      `💰 Balance: 1,250 Coins (Demo)\n` +
-                      `🏆 Level: 3 | Streak: 2 days 🔥\n\n` +
-                      `💡 *Tip:* Share your link to earn 15% forever!`,
+                      `💰 Balance: 0 Coins (0 Taka) • 1000 = 5 Taka\n` +
+                      `🏆 Level: 1 | Streak: 0 days\n\n` +
+                      `💡 *Tip:* Watch ads & invite friends to earn!`,
                 parse_mode: 'Markdown',
                 reply_markup: {
                   inline_keyboard: [
@@ -105,12 +107,13 @@ export default async function handler(req, res) {
           `/balance - Check coins (in App)\n` +
           `/invite - Get invite link\n` +
           `/withdraw - Withdraw (in App)\n\n` +
-          `💎 *How to Earn:*\n` +
+          `💎 *How to Earn (Real Rate):*\n` +
           `• Watch Ad = 50 coins (15s cooldown)\n` +
           `• Daily Check-in = 50-1000 coins\n` +
-          `• Spin = 3 free daily, win 500\n` +
+          `• Spin = 1 free daily, win up to 500\n` +
           `• Vault Claim = Watch ad to claim\n` +
-          `• Min withdraw 5000 coins ($0.60)\n\n` +
+          `• Rate: 1000 Coins = 5 Taka\n` +
+          `• Min withdraw 10000 coins = 50 Taka\n\n` +
           `🔒 Username \`${username}\` auto-connected to Web App!\n` +
           `Support: @BoomTakaBd_bot`
 
