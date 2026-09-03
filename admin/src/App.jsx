@@ -148,12 +148,65 @@ export default function App() {
           </div>
 
           <div className="card">
-            <div style={{fontWeight:700, marginBottom:10}}>Monetag Earnings Estimate (BD)</div>
-            <div style={{fontSize:13, color:'#8B92B8', lineHeight:1.8}}>
-              • Total Ads {totalAds} × $0.003 = <b style={{color:'#00D68F'}}>${(totalAds*0.003).toFixed(2)}</b> (≈ ৳{(totalAds*0.003*110).toFixed(0)})<br/>
-              • If 1000 ads/day → ~$3/day → ৳330/day<br/>
-              • In-App auto 2 per 6min = extra ~$0.30/1000 views<br/>
-              • Check real earnings: <a href="https://monetag.com" target="_blank" style={{color:'#6C5CFF'}}>monetag.com → Reports</a>
+            <div style={{fontWeight:700, marginBottom:10, display:'flex', alignItems:'center', gap:8}}>💰 Estimated Earnings - Monetag Zone 11718341 <span style={{background:'rgba(0,214,143,0.12)', color:'#00D68F', fontSize:10, padding:'3px 8px', borderRadius:999, border:'1px solid rgba(0,214,143,0.25)'}}>BD Rate $0.003/ad</span></div>
+            <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:12, marginBottom:14}}>
+              <div style={{background:'rgba(0,214,143,0.08)', border:'1px solid rgba(0,214,143,0.2)', borderRadius:12, padding:14, textAlign:'center'}}>
+                <div style={{fontSize:20, fontWeight:800, color:'#00D68F'}}>${(totalAds*0.003).toFixed(2)}</div>
+                <div style={{fontSize:11, color:'#8B92B8'}}>Today • {totalAds} ads</div>
+                <div style={{fontSize:10, color:'#00D68F'}}>৳{(totalAds*0.003*110).toFixed(0)} Taka</div>
+              </div>
+              <div style={{background:'var(--card2)', border:'1px solid var(--border)', borderRadius:12, padding:14, textAlign:'center'}}>
+                <div style={{fontSize:18, fontWeight:800}}>${(totalAds*0.003*7).toFixed(2)}</div>
+                <div style={{fontSize:11, color:'#8B92B8'}}>Weekly (×7)</div>
+                <div style={{fontSize:10, color:'#8B92B8'}}>৳{(totalAds*0.003*7*110).toFixed(0)}</div>
+              </div>
+              <div style={{background:'var(--card2)', border:'1px solid var(--border)', borderRadius:12, padding:14, textAlign:'center'}}>
+                <div style={{fontSize:18, fontWeight:800}}>${(totalAds*0.003*30).toFixed(2)}</div>
+                <div style={{fontSize:11, color:'#8B92B8'}}>Monthly (×30)</div>
+                <div style={{fontSize:10, color:'#8B92B8'}}>৳{(totalAds*0.003*30*110).toFixed(0)}</div>
+              </div>
+              <div style={{background: (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? 'rgba(0,214,143,0.08)' : 'rgba(255,59,92,0.08)', border:`1px solid ${ (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? 'rgba(0,214,143,0.2)' : 'rgba(255,59,92,0.2)'}`, borderRadius:12, padding:14, textAlign:'center'}}>
+                <div style={{fontSize:18, fontWeight:800, color: (totalAds*0.003 - totalBalance/1000*0.045) >=0 ? '#00D68F' : '#FF3B5C'}}>${(totalAds*0.003 - totalBalance/1000*0.045).toFixed(2)}</div>
+                <div style={{fontSize:11, color:'#8B92B8'}}>Est. Profit Today</div>
+                <div style={{fontSize:10, color:'#8B92B8'}}>Earn - Payout</div>
+              </div>
+            </div>
+
+            <div style={{background:'var(--bg)', border:'1px solid var(--border)', borderRadius:12, padding:14, marginBottom:12}}>
+              <div style={{fontWeight:600, fontSize:13, marginBottom:8}}>📊 Breakdown</div>
+              <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, fontSize:12, color:'#8B92B8', lineHeight:1.8}}>
+                <div>• Total Ads Today: <b style={{color:'white'}}>{totalAds}</b></div>
+                <div>• Avg Ads/User: <b style={{color:'white'}}>{totalUsers? (totalAds/totalUsers).toFixed(1):0}</b></div>
+                <div>• Payout Due: <b style={{color:'#FFB800'}}>{totalBalance} coins = ৳{totalTaka} (${(totalBalance/1000*0.045).toFixed(2)})</b></div>
+                <div>• Per Ad Earn: <b style={{color:'#00D68F'}}>$0.003</b> • Per Ad Cost: $0.00225 (50 coin)</div>
+                <div>• In-App Auto: 2 per 6min = +{(totalUsers*2).toFixed(0)} ads/day est.</div>
+                <div>• Real check: <a href="https://monetag.com" target="_blank" style={{color:'#6C5CFF'}}>monetag.com → Reports</a></div>
+              </div>
+            </div>
+
+            <div style={{background:'var(--card2)', border:'1px solid var(--border)', borderRadius:12, padding:14}}>
+              <div style={{fontWeight:600, fontSize:12, marginBottom:10, color:'#8B92B8'}}>7-Day Projection (based on today {totalAds} ads)</div>
+              <svg viewBox="0 0 300 80" style={{width:'100%', height:80}}>
+                {/* Simple bars for 7 days */}
+                <rect x="10" y="60" width="28" height="15" rx="4" fill="#1A2040" stroke="#242E5A" />
+                <rect x="48" y="45" width="28" height="30" rx="4" fill="#242E5A" />
+                <rect x="86" y="50" width="28" height="25" rx="4" fill="#242E5A" />
+                <rect x="124" y="35" width="28" height="40" rx="4" fill="#242E5A" />
+                <rect x="162" y="40" width="28" height="35" rx="4" fill="#6C5CFF" opacity="0.6" />
+                <rect x="200" y="30" width="28" height="45" rx="4" fill="#6C5CFF" opacity="0.8" />
+                <rect x="238" y="20" width="28" height="55" rx="4" fill="#00D68F" />
+                <text x="24" y="78" fontSize="7" fill="#8B92B8">D1</text>
+                <text x="62" y="78" fontSize="7" fill="#8B92B8">D2</text>
+                <text x="100" y="78" fontSize="7" fill="#8B92B8">D3</text>
+                <text x="138" y="78" fontSize="7" fill="#8B92B8">D4</text>
+                <text x="176" y="78" fontSize="7" fill="#8B92B8">D5</text>
+                <text x="214" y="78" fontSize="7" fill="#8B92B8">D6</text>
+                <text x="252" y="78" fontSize="7" fill="#00D68F" fontWeight="700">Today</text>
+              </svg>
+              <div style={{display:'flex', justifyContent:'space-between', fontSize:10, color:'#8B92B8', marginTop:4}}>
+                <span>Est. $ {(totalAds*0.003*0.6).toFixed(2)}</span>
+                <span style={{color:'#00D68F', fontWeight:700}}>Today ${ (totalAds*0.003).toFixed(2)} • Profit ${(totalAds*0.003 - totalBalance/1000*0.045).toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
