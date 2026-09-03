@@ -188,6 +188,12 @@ export default function App() {
                 <div>
                   <div className="hero-balance">{balance.toLocaleString()} <span>COINS</span></div>
                   <div className="usd"><CoinTiny size={12} /> ≈ ${usdValue.toFixed(2)} USD • Level {level}</div>
+                  {user?.username && user.username !== 'demo' && (
+                    <div style={{marginTop:8, background:'rgba(0,214,143,0.10)', border:'1px solid rgba(0,214,143,0.22)', padding:'5px 10px', borderRadius:999, fontSize:11, display:'inline-flex', alignItems:'center', gap:6, color:'#00D68F', fontWeight:700}}>
+                      <span style={{width:6,height:6, borderRadius:'50%', background:'#00D68F', display:'inline-block'}}></span>
+                      @{user.username} • Direct Telegram Login ✓
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="progress-wrap">
