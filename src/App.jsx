@@ -577,7 +577,6 @@ export default function App() {
           <>
             <div style={{padding:'16px 16px 0'}}>
               <h2 style={{fontSize:22, fontWeight:800, display:'flex', alignItems:'center', gap:8}}><IconWithdraw size={20} /> Wallet</h2>
-              <p style={{color:'#8B92B8', fontSize:13}}>Withdraw your earnings instantly</p>
             </div>
             <div className="hero" style={{background:'linear-gradient(135deg,#11162A,#1A2040)'}}>
               <div style={{fontSize:12, color:'#8B92B8', letterSpacing:1, fontWeight:700, display:'flex', alignItems:'center', gap:6}}><IconShield size={12} /> TOTAL BALANCE</div>
