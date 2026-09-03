@@ -1,4 +1,4 @@
-# EarnPulse - World Best Telegram Earning Mini App
+# TakaBoom - World Best Telegram Earning Mini App
 
 Premium Telegram Mini App built with React + Vite. Ready for Vercel + GitHub.
 
@@ -38,7 +38,7 @@ Without keys, app runs in MOCK mode (1.8s simulated ad).
 ```bash
 git init
 git add .
-git commit -m "EarnPulse initial"
+git commit -m "TakaBoom initial"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/earning-app.git
 git push -u origin main
