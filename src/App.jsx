@@ -9,7 +9,7 @@ import {
 } from './components/Icons.jsx'
 
 // --- Config ---
-const AD_ZONE_ID = 'YOUR_ZONE_ID'
+const AD_ZONE_ID = '11718341'
 const COIN_PER_AD = 50
 const DAILY_REWARDS = [50,100,150,250,400,600,1000]
 const WITHDRAW_MIN = 5000
