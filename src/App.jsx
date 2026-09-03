@@ -382,16 +382,16 @@ export default function App() {
               <div style={{fontWeight:800, fontSize:18, position:'relative', zIndex:1, display:'flex', alignItems:'center', gap:8}}><IconGift size={20} /> Invite Friends & Earn</div>
               <div style={{fontSize:13, opacity:0.9, marginTop:4, position:'relative', zIndex:1, display:'flex', alignItems:'center', gap:4}}>Get 15% forever + <CoinTiny size={12} /> 500 coins per friend</div>
               <div className="invite-link">
-                <span>t.me/TakaBoomBot?start={user?.id || 'demo'}</span>
+                <span>t.me/BoomTakaBd_bot?start={user?.id || 'demo'}</span>
                 <button onClick={()=>{
-                    const link = `https://t.me/TakaBoomBot?start=${user?.id||'demo'}`
+                    const link = `https://t.me/BoomTakaBd_bot?start=${user?.id||'demo'}`
                     navigator.clipboard?.writeText(link)
                     showToast('Link copied!')
                     haptic('light')
                   }} style={{background:'white', color:'#6C5CFF', border:'none', padding:'6px 12px', borderRadius:8, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6}}><IconCopy size={14} /> Copy</button>
               </div>
               <button className="btn-secondary" style={{width:'100%', marginTop:12, background:'white', color:'#6C5CFF', border:'none', justifyContent:'center', fontWeight:800, position:'relative', zIndex:1}} onClick={()=>{
-                const link = `https://t.me/TakaBoomBot?start=${user?.id||'demo'}`
+                const link = `https://t.me/BoomTakaBd_bot?start=${user?.id||'demo'}`
                 const text = `Join TakaBoom & earn Taka! ${link}`
                 window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`,'_blank')
               }}>
