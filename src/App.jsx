@@ -271,22 +271,12 @@ export default function App() {
               <div style={{display:'flex', alignItems:'center', gap:8, marginBottom:10}}>
                 <div style={{background:'linear-gradient(135deg,#FFB800,#FF6B00)', color:'#000', fontWeight:900, fontSize:11, padding:'4px 10px', borderRadius:999, display:'flex', alignItems:'center', gap:5, letterSpacing:0.5}}><IconZap size={12} /> TAKA BOOM</div>
                 <span style={{fontSize:10, color:'#8B92B8', fontWeight:700, letterSpacing:1}}>WORLD BEST EARNING APP</span>
-                <span style={{marginLeft:'auto', background: fbStatus==='connected' ? 'rgba(0,214,143,0.12)' : 'rgba(255,184,0,0.12)', color: fbStatus==='connected' ? '#00D68F' : '#FFB800', fontSize:10, padding:'3px 8px', borderRadius:999, border: `1px solid ${fbStatus==='connected' ? 'rgba(0,214,143,0.25)' : 'rgba(255,184,0,0.25)'}`, fontWeight:800, display:'flex', alignItems:'center', gap:4}}>
-                  <span style={{width:6,height:6, borderRadius:'50%', background: fbStatus==='connected' ? '#00D68F' : '#FFB800', display:'inline-block'}}></span>
-                  {fbStatus==='connected' ? 'DB Connected' : fbStatus==='loading' ? 'Syncing...' : fbStatus==='error' ? 'Offline' : 'LIVE'}
-                </span>
               </div>
               <div style={{display:'flex', alignItems:'center', gap:14}}>
                 <div className="coin-icon" style={{background:'none', boxShadow:'none', borderRadius:0}}><CoinSVG size={62} /></div>
                 <div>
                   <div className="hero-balance">{balance.toLocaleString()} <span>COINS</span></div>
                   <div className="usd"><CoinTiny size={12} /> ≈ ${usdValue.toFixed(2)} USD • Level {level}</div>
-                  {user?.username && user.username !== 'demo' && (
-                    <div style={{marginTop:8, background:'rgba(0,214,143,0.10)', border:'1px solid rgba(0,214,143,0.22)', padding:'5px 10px', borderRadius:999, fontSize:11, display:'inline-flex', alignItems:'center', gap:6, color:'#00D68F', fontWeight:700}}>
-                      <span style={{width:6,height:6, borderRadius:'50%', background:'#00D68F', display:'inline-block'}}></span>
-                      @{user.username} • Direct Telegram Login ✓
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="progress-wrap">
