@@ -13,6 +13,7 @@ export default function App() {
   const [toast, setToast] = useState(null)
   const [notifText, setNotifText] = useState('')
   const [search, setSearch] = useState('')
+  const [currentGlobal, setCurrentGlobal] = useState(null)
 
   const showToast = (m) => { setToast(m); setTimeout(()=>setToast(null), 2500) }
 
@@ -43,6 +44,17 @@ export default function App() {
       setWithdraws(allW)
     })
     return () => off(r)
+  }, [auth])
+
+  // Load current global notification
+  useEffect(() => {
+    if (!auth) return
+    const gRef = ref(db, 'takaboom/global')
+    const unsub = onValue(gRef, snap => {
+      if (snap.exists() && snap.val().message) setCurrentGlobal(snap.val())
+      else setCurrentGlobal(null)
+    })
+    return () => off(gRef)
   }, [auth])
 
   const handleWithdraw = async (w, status) => {
@@ -90,6 +102,13 @@ export default function App() {
     }
     showToast(`Sent to ${sent} users + saved to app`)
     setNotifText('')
+  }
+
+  const handleDeleteGlobal = async () => {
+    if (!currentGlobal) return showToast('No active notification')
+    if (!confirm(`Delete global notification?\n\n"${currentGlobal.message}"\n\nApp banner will disappear for all users.`)) return
+    await remove(ref(db, 'takaboom/global'))
+    showToast('Global notification deleted - banner removed')
   }
 
   const handleResetUser = async (u) => {
@@ -285,9 +304,17 @@ export default function App() {
         <div className="card">
           <div style={{fontWeight:700, marginBottom:10}}>Global Notification - Send to All Users</div>
           <div style={{fontSize:12, color:'#8B92B8', marginBottom:10}}>Telegram bot diye 50 jon ke per batch pathabe + Firebase e save hobe (app e banner hisabe dekha jabe)</div>
+          {currentGlobal && (
+            <div style={{background:'rgba(255,184,0,0.08)', border:'1px solid rgba(255,184,0,0.2)', borderRadius:12, padding:12, marginBottom:12}}>
+              <div style={{fontWeight:600, fontSize:12, color:'#FFB800', marginBottom:6}}>📢 Active Global Notification:</div>
+              <div style={{fontSize:13, color:'white', background:'var(--bg)', padding:10, borderRadius:8, border:'1px solid var(--border)', lineHeight:1.5}}>{currentGlobal.message}</div>
+              <div style={{fontSize:11, color:'#8B92B8', marginTop:6}}>Sent: {new Date(currentGlobal.sentAt).toLocaleString()} • App banner e show hocche</div>
+              <button className="btn btn-reject" style={{marginTop:8}} onClick={handleDeleteGlobal}>🗑️ Delete - Banner soraw</button>
+            </div>
+          )}
           <textarea className="input" rows={4} placeholder="Ex: TakaBoom e notun offer! Aj 100 ad dekhle 200 bonus..." value={notifText} onChange={e=>setNotifText(e.target.value)} style={{resize:'vertical'}} />
           <button className="btn-send" style={{marginTop:10}} onClick={handleGlobalNotif}>📢 Send to All ({users.length} users)</button>
-          <div style={{fontSize:11, color:'#8B92B8', marginTop:8}}>Tip: Max 50 per batch, baki auto next batch e jabe</div>
+          <div style={{fontSize:11, color:'#8B92B8', marginTop:8}}>Tip: Max 50 per batch, baki auto next batch e jabe • Chaile Active ta Delete kore banner sorate parbe</div>
         </div>
       )}
 
