@@ -29,44 +29,42 @@ export default function App() {
   const [withdrawMethod, setWithdrawMethod] = useState('bKash')
   const [withdrawAcc, setWithdrawAcc] = useState('')
 
-  const [balance, setBalance] = useState(() => loadState()?.balance ?? 1250)
-  const [level, setLevel] = useState(() => loadState()?.level ?? 3)
-  const [xp, setXp] = useState(() => loadState()?.xp ?? 340)
-  const [streak, setStreak] = useState(() => loadState()?.streak ?? 2)
+  const [balance, setBalance] = useState(() => loadState()?.balance ?? 0)
+  const [level, setLevel] = useState(() => loadState()?.level ?? 1)
+  const [xp, setXp] = useState(() => loadState()?.xp ?? 0)
+  const [streak, setStreak] = useState(() => loadState()?.streak ?? 0)
   const [lastCheckin, setLastCheckin] = useState(() => loadState()?.lastCheckin ?? null)
-  const [adsToday, setAdsToday] = useState(() => loadState()?.adsToday ?? 7)
+  const [adsToday, setAdsToday] = useState(() => loadState()?.adsToday ?? 0)
   const [adsLimit] = useState(30)
   const [adCooldown, setAdCooldown] = useState(0)
   const [isAdLoading, setIsAdLoading] = useState(false)
   const [spinDeg, setSpinDeg] = useState(0)
-  const [spinsLeft, setSpinsLeft] = useState(() => loadState()?.spinsLeft ?? 3)
+  const [spinsLeft, setSpinsLeft] = useState(() => loadState()?.spinsLeft ?? 1)
   const [miningBoost, setMiningBoost] = useState(() => loadState()?.miningBoost ?? 1)
-  const [miningClaimable, setMiningClaimable] = useState(86)
+  const [miningClaimable, setMiningClaimable] = useState(0)
   const [fbLoaded, setFbLoaded] = useState(false)
   const [fbStatus, setFbStatus] = useState('connecting')
 
   const [tasks, setTasks] = useState(() => loadState()?.tasks ?? [
     { id:1, title:'Join Telegram Channel', reward:200, done:false, color:'#6C5CFF', link:'https://t.me/', iconType:'megaphone' },
     { id:2, title:'Follow X (Twitter)', reward:150, done:false, color:'#1DA1F2', link:'https://x.com/', iconType:'twitter' },
-    { id:3, title:'Watch 5 Ads Today', reward:300, done:false, progress: 7, total:5, color:'#00E5CC', iconType:'video' },
-    { id:4, title:'Invite 3 Friends', reward:500, done:false, progress:1, total:3, color:'#FFB800', iconType:'gift' },
+    { id:3, title:'Watch 5 Ads Today', reward:300, done:false, progress: 0, total:5, color:'#00E5CC', iconType:'video' },
+    { id:4, title:'Invite 3 Friends', reward:500, done:false, progress:0, total:3, color:'#FFB800', iconType:'gift' },
     { id:5, title:'Daily Check-in 7 Days', reward:800, done:false, color:'#FF3B5C', iconType:'flame' },
   ])
-  const [referrals] = useState(12)
-  const [withdraws, setWithdraws] = useState(() => loadState()?.withdraws ?? [
-    { id:1, amount:5000, method:'bKash', status:'Paid', date:'2025-08-28' },
-  ])
+  const [referrals, setReferrals] = useState(() => loadState()?.referrals ?? 0)
+  const [withdraws, setWithdraws] = useState(() => loadState()?.withdraws ?? [])
   const [leaderboard] = useState([
     { name:'Alex Max', coins:45230, avatar:'AM' },
     { name:'Sara Khan', coins:38900, avatar:'SK' },
     { name:'Minhaj Uddin', coins:34100, avatar:'MU' },
-    { name:'You', coins: 1250, avatar:'YO', isYou:true },
+    { name:'You', coins: 0, avatar:'YO', isYou:true },
     { name:'Crypto King', coins:28900, avatar:'CK' },
   ])
 
   useEffect(() => {
-    saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost })
-  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost])
+    saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals })
+  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals])
 
   // Firebase Realtime DB - Direct Telegram username system, all data save in real time
   useEffect(() => {
@@ -86,6 +84,7 @@ export default function App() {
         if (d.miningBoost !== undefined) setMiningBoost(d.miningBoost)
         if (d.tasks) setTasks(d.tasks)
         if (d.withdraws) setWithdraws(d.withdraws)
+        if (d.referrals !== undefined) setReferrals(d.referrals)
         setFbStatus('connected')
         // showToast handled elsewhere to avoid spam
       } else {
@@ -95,7 +94,7 @@ export default function App() {
           username: user.username || '',
           first_name: user.first_name || '',
           photo_url: user.photo_url || '',
-          balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws,
+          balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }).then(()=> setFbStatus('connected')).catch(()=> setFbStatus('error'))
@@ -114,7 +113,7 @@ export default function App() {
     const uref = userRef(user.id)
     const t = setTimeout(() => {
       update(uref, {
-        balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws,
+        balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals,
         username: user.username || '',
         first_name: user.first_name || '',
         photo_url: user.photo_url || '',
@@ -125,7 +124,7 @@ export default function App() {
       })
     }, 600)
     return () => clearTimeout(t)
-  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, fbLoaded, user?.id, user?.username])
+  }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, miningBoost, tasks, withdraws, referrals, fbLoaded, user?.id, user?.username])
 
   useEffect(() => {
     if (adCooldown <=0) return
@@ -179,7 +178,11 @@ export default function App() {
       setAdCooldown(15)
       setTasks(ts=> ts.map(t=> t.id===3 ? {...t, progress: Math.min((t.progress||0)+1, t.total)} : t))
       if ((adsToday+1) % 3 === 0) setSpinsLeft(s=> s+1)
-    } catch { showToast('Ad not ready, try again') }
+    } catch (e) {
+      console.error('Watch Ad failed', e)
+      const msg = e?.message?.includes('not loaded') ? 'Ad blocked: Add takaboom.vercel.app in Monetag dashboard > Sites, or disable ad blocker' : 'Ad not ready, try again in 10s'
+      showToast(msg)
+    }
     finally { setIsAdLoading(false) }
   }
 
@@ -219,8 +222,9 @@ export default function App() {
     try {
       await showRewardedPopup(AD_ZONE_ID)
       addCoins(reward, title)
-    } catch {
-      showToast('Ad not ready, try again')
+    } catch (e) {
+      console.error('Popup failed', e)
+      showToast(e?.message?.includes('not loaded') ? 'Ad blocked: Add takaboom.vercel.app in Monetag dashboard' : 'Ad not ready, try again')
     }
   }
 
@@ -383,9 +387,9 @@ export default function App() {
                   <div style={{width:36,height:36, borderRadius:'50%', background: u.isYou?'linear-gradient(135deg,#6C5CFF,#00E5CC)':'#242E5A', display:'grid', placeItems:'center', fontWeight:700, fontSize:12}}>{u.avatar}</div>
                   <div style={{flex:1}}>
                     <div style={{fontWeight:700, fontSize:13}}>{u.name} {u.isYou && '(You)'}</div>
-                    <div style={{fontSize:11, color:'#8B92B8', display:'flex', alignItems:'center', gap:4}}><CoinTiny size={10} />{u.coins.toLocaleString()} coins</div>
+                    <div style={{fontSize:11, color:'#8B92B8', display:'flex', alignItems:'center', gap:4}}><CoinTiny size={10} />{u.isYou ? balance.toLocaleString() : u.coins.toLocaleString()} coins</div>
                   </div>
-                  <div style={{fontWeight:800, color:'#FFB800', display:'flex', alignItems:'center', gap:4}}><CoinSmall size={14} /> {u.coins.toLocaleString()}</div>
+                  <div style={{fontWeight:800, color:'#FFB800', display:'flex', alignItems:'center', gap:4}}><CoinSmall size={14} /> {u.isYou ? balance.toLocaleString() : u.coins.toLocaleString()}</div>
                 </div>
               ))}
             </div>
