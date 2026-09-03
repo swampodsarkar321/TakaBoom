@@ -62,10 +62,37 @@ export default function App() {
   const [leaderboard, setLeaderboard] = useState([])
   const [isBanned, setIsBanned] = useState(false)
   const [globalMsg, setGlobalMsg] = useState(null)
+  // Weekly Withdraw - Friday & Saturday only (Asia/Dhaka)
+  const isWithdrawOpen = () => {
+    try {
+      const now = new Date()
+      const bdNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dhaka"}))
+      const day = bdNow.getDay()
+      return day === 5 || day === 6
+    } catch { const d=new Date().getDay(); return d===5||d===6 }
+  }
+  const [withdrawOpen, setWithdrawOpen] = useState(() => isWithdrawOpen())
+  const nextWithdrawText = () => {
+    try {
+      const now = new Date()
+      const bdNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Dhaka"}))
+      const day = bdNow.getDay()
+      if (day === 5 || day === 6) return "Open Now • Closes Sat 11:59 PM BD"
+      const daysUntilFriday = (5 - day + 7) % 7 || 7
+      const next = new Date(bdNow)
+      next.setDate(bdNow.getDate() + daysUntilFriday)
+      return `Opens Fri ${next.toLocaleDateString("en-GB", {day:'numeric', month:'short'})} 12:00 AM BD`
+    } catch { return "Opens Friday" }
+  }
 
   useEffect(() => {
     saveState({ balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable })
   }, [balance, level, xp, streak, lastCheckin, adsToday, spinsLeft, tasks, withdraws, miningBoost, referrals, miningActive, miningStart, miningEnd, miningClaimable])
+
+  useEffect(() => {
+    const t = setInterval(() => setWithdrawOpen(isWithdrawOpen()), 60000)
+    return () => clearInterval(t)
+  }, [])
 
   // Firebase Realtime DB - Direct Telegram username system, all data save in real time - with real-time banned listener
   useEffect(() => {
@@ -409,6 +436,7 @@ export default function App() {
   }
 
   const handleWithdraw = () => {
+    if (!withdrawOpen) return showToast(nextWithdrawText())
     if (!withdrawAcc.trim()) return showToast('Enter account number')
     if (balance < WITHDRAW_MIN) return showToast(`Minimum ${WITHDRAW_MIN} coins needed`)
     const amt = Math.floor(balance)
@@ -716,10 +744,14 @@ export default function App() {
               <div className="hero-balance" style={{marginTop:6, display:'flex', alignItems:'center', gap:8}}><CoinSVG size={36} /> {balance.toLocaleString()} <span>COINS</span></div>
               <div style={{color:'#00D68F', fontSize:14, fontWeight:700, marginTop:4, display:'flex', alignItems:'center', gap:6}}><CoinTiny size={12} />≈ ৳{tkValue.toFixed(0)} Taka <span style={{fontSize:11, opacity:0.7}}>(${(usdValue).toFixed(2)})</span></div>
               <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:16}}>
-                <button className="btn-primary" onClick={()=>setShowWithdraw(true)} style={{padding:'12px', gap:6}}><IconWithdraw size={16} /> Withdraw</button>
+                <button className="btn-primary" onClick={()=> withdrawOpen ? setShowWithdraw(true) : showToast(nextWithdrawText())} style={{padding:'12px', gap:6, opacity: withdrawOpen?1:0.6}}><IconWithdraw size={16} /> Withdraw {withdrawOpen ? '' : '🔒'}</button>
                 <button className="btn-secondary" style={{justifyContent:'center', gap:6}} onClick={()=>showToast('History below')}><IconClock size={14} /> History</button>
               </div>
               <div style={{fontSize:11, color:'#8B92B8', marginTop:10, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:4}}><IconShield size={10} /> Min withdraw: {WITHDRAW_MIN.toLocaleString()} coins = ৳{(WITHDRAW_MIN/1000*RATE_TK_PER_1000)} Taka • 1000 Coins = {RATE_TK_PER_1000} Taka</div>
+              <div style={{marginTop:10, padding:'8px 12px', borderRadius:999, fontSize:12, fontWeight:700, textAlign:'center', display:'flex', alignItems:'center', justifyContent:'center', gap:6, background: withdrawOpen ? 'rgba(0,214,143,0.12)' : 'rgba(255,59,92,0.12)', color: withdrawOpen ? '#00D68F' : '#FF3B5C', border: `1px solid ${withdrawOpen ? 'rgba(0,214,143,0.25)' : 'rgba(255,59,92,0.25)'}`}}>
+                <span style={{width:8,height:8, borderRadius:'50%', background: withdrawOpen ? '#00D68F' : '#FF3B5C', display:'inline-block'}}></span>
+                {withdrawOpen ? 'Withdraw Open • Fri-Sat' : nextWithdrawText()}
+              </div>
             </div>
 
             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, margin:'0 16px'}}>
@@ -728,7 +760,7 @@ export default function App() {
                 {name:'Nagad', color:'#FF6B00', min:'10000'},
                 {name:'USDT', color:'#00D68F', min:'10000'},
               ].map(m=>(
-                <div key={m.name} className="stat-card" onClick={()=>{setWithdrawMethod(m.name); setShowWithdraw(true)}} style={{cursor:'pointer', borderColor: m.color+'40'}}>
+                <div key={m.name} className="stat-card" onClick={()=>{ if(!withdrawOpen) return showToast(nextWithdrawText()); setWithdrawMethod(m.name); setShowWithdraw(true)}} style={{cursor:'pointer', borderColor: m.color+'40', opacity: withdrawOpen?1:0.6}}>
                   <div style={{width:32,height:32, borderRadius:8, background:m.color, display:'grid', placeItems:'center', margin:'0 auto'}}><IconWithdraw size={16} /></div>
                   <div style={{fontWeight:700, fontSize:13, marginTop:6}}>{m.name}</div>
                   <div style={{fontSize:11, color:'#8B92B8', display:'flex', alignItems:'center', justifyContent:'center', gap:3}}><CoinTiny size={10} /> Min {m.min}</div>

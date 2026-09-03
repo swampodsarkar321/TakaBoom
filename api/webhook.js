@@ -44,7 +44,7 @@ export default async function handler(req, res) {
           `🔥  *Daily Check-in* → Up to 1000 Coins\n` +
           `⛏️  *Taka Vault* → Auto Earn + Claim\n` +
           `👥  *Invite Friends* → 500 Coins + 15% Lifetime\n` +
-          `💳  *Instant Withdraw* → bKash / Nagad / USDT\n` +
+          `💳  *Withdraw* → bKash / Nagad / USDT (Fri-Sat only)\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
           `💰 *Rate: 1000 Coins = 4 Taka* (Min withdraw 10000 = 40 Taka)\n` +
           `━━━━━━━━━━━━━━━━━━━━\n\n` +
